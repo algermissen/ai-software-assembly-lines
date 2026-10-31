@@ -1,19 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Agent / Software MES</title>
-<style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1{color:#1a365d} .assessment{background:#edf2f7;padding:1rem;margin:1rem 0;border-radius:8px}</style></head>
+<head><meta charset="UTF-8"><title>Software MES - Detailed Architecture</title>
+<style>body{font-family:system-ui;max-width:900px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1,h2{color:#1a365d} .section{background:#f7fafc;padding:1rem;margin:1rem 0;border-radius:8px;border-left:4px solid #3182ce}</style></head>
 <body>
-<h1>3. Agent / Software MES</h1>
-<p><a href="index.html">← Back to index</a></p>
-<h2>Description</h2>
-<p>Manufacturing Execution System analog for software. Manages "production orders" (features, bugs, migrations as work orders). Schedules and orchestrates agent tasks across lines. Tracks Work-In-Progress (WIP), status, resource consumption (tokens, compute). Enforces quality gates. Maintains genealogy/provenance of every change (which agent, model, prompt, human input produced it). Provides plant-floor-like dashboards. Integrates with higher-level systems (product/ERP analogs) and lower-level (agents, CI).</p>
-<h2>Manufacturing Parallel</h2>
-<p>MES coordinates between ERP and shop floor, tracks orders, materials, quality, genealogy. Essential for execution control in Industry 4.0.</p>
-<div class="assessment">
-<h2>Adversarial Assessment</h2>
-<p><strong>Pros:</strong> Visibility and control over agent fleets. Standardized execution. Quality and auditability (critical for regulated domains). Enables OEE-like metrics and capacity planning. Genealogy supports debugging and compliance. Pairs excellently with UDN as data layer.</p>
-<p><strong>Cons / Risks:</strong> Can become bureaucratic bottleneck. Over-specification may kill agent speed/creativity. Data model and integration complexity. May not adapt well to highly fluid agile discovery work. Heavyweight for small teams.</p>
-<p><strong>Viability:</strong> High for enterprises and scaled agent operations. Good near-term for teams with many concurrent agent sessions.</p>
-<p><strong>Team Adversarial Vote:</strong> Valuable orchestration layer. Implement lightweight first; avoid over-engineering. Strong when combined with UDN and quality gates.</p>
+<h1>3. Agent / Software MES — Detailed Implementation</h1>
+<p><a href="index.html">← Index</a></p>
+
+<div class="section">
+<h2>Architecture Overview</h2>
+<p>Execution layer that manages production orders (features, bugs, migrations), schedules resources (agents, humans, compute/tokens), enforces sequence and quality gates, tracks full genealogy, and provides plant-floor visibility. Sits above the UDN event bus and integrates with Jidoka stations.</p>
+</div>
+
+<div class="section">
+<h2>Technology Choices</h2>
+<ul>
+<li><strong>Core Orchestrator:</strong> Temporal workflows (one workflow per production order; durable, supports long waits for humans/agents). Alternative: Camunda BPMN processes.</li>
+<li><strong>State &amp; Genealogy:</strong> Event sourcing into the UDN + materialized views in Postgres (current order state) and ClickHouse (analytics). Full lineage via OpenTelemetry traces linked to order_id.</li>
+<li><strong>Scheduling:</strong> Resource pool management (agent capacity, token budgets) inside Temporal activities or a dedicated scheduler service.</li>
+<li><strong>Integrations:</strong> Bidirectional with Linear/Jira (status sync), GitHub (branch/PR events), observability backends. All via UDN topics.</li>
+<li><strong>Dashboards:</strong> Grafana or custom (using the materialized views) showing order status, station queues, OEE, genealogy trees.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Defined Datapoints &amp; Metrics</h2>
+<ul>
+<li>Production Order: id, type, priority, risk_tier, acceptance_criteria, current_station, status (queued/in_progress/blocked/complete/failed), start/end timestamps, assigned_resources, token_budget_remaining.</li>
+<li>Genealogy: ordered list of events/spans (agent_session, model, prompt_hash, tool_calls, human_approvals, quality_results) with parent/child links.</li>
+<li>MES KPIs: order cycle time, on-time completion rate, resource utilization, blocked time %, genealogy completeness %, quality gate pass rate per station.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Development / Operations Process Flow</h2>
+<ol>
+<li>Intent validated and converted to production order in MES (pull from product backlog).</li>
+<li>MES schedules first station, reserves agent/compute capacity, publishes order.ready_for_station.</li>
+<li>Station executes (via agent or human); publishes progress and results to UDN; MES updates order state and genealogy.</li>
+<li>Quality gate failure or Andon → MES marks order blocked, notifies, waits for resolution event, then resumes or rework path.</li>
+<li>All stations complete + final gate pass → MES authorizes deploy (or auto if dark-factory eligible).</li>
+<li>Post-deploy monitoring events update order to "in production"; any incident can create a linked rework order with full prior genealogy.</li>
+<li>Completed orders feed SPC and Kaizen analysis.</li>
+</ol>
+<p>Provides the control plane that manufacturing MES gives the shop floor: visibility, sequencing, resource management, and full traceability of every "part" (change).</p>
 </div>
 </body></html>

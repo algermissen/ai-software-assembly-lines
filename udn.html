@@ -1,19 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Unified Development Namespace (UDN)</title>
-<style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1{color:#1a365d} .assessment{background:#edf2f7;padding:1rem;margin:1rem 0;border-radius:8px}</style></head>
+<head><meta charset="UTF-8"><title>Unified Development Namespace (UDN) - Detailed Architecture</title>
+<style>body{font-family:system-ui;max-width:900px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1,h2{color:#1a365d} .section{background:#f7fafc;padding:1rem;margin:1rem 0;border-radius:8px;border-left:4px solid #3182ce} pre{background:#edf2f7;padding:1rem;overflow:auto}</style></head>
 <body>
-<h1>1. Unified Development Namespace (UDN)</h1>
-<p><a href="index.html">← Back to index</a></p>
-<h2>Description</h2>
-<p>Adapted from Walker Reynolds' Unified Namespace (UNS) for IIoT. A semantic hierarchical structure (inspired by ISA-95 plant/area/line/cell) that serves as the single source of truth for all software development and operations artifacts: source code events, pull requests, agent actions, test results, build metrics, runtime telemetry, specs, and quality data. Systems and agents publish to and subscribe from this namespace via an event bus (MQTT, Kafka, NATS, or GitHub webhooks + custom broker). Eliminates point-to-point integrations between agents, tools, and humans.</p>
-<h2>Manufacturing Parallel</h2>
-<p>UNS connects PLCs, SCADA, MES, ERP into one real-time semantic hub. UDN does the same for IDEs, CI, agents, observability, and product systems. Enables the continuous stream of code (per poteto) to be constrained and observable.</p>
-<div class="assessment">
-<h2>Adversarial Assessment</h2>
-<p><strong>Pros:</strong> Scales agent coordination from N² to N integrations. Provides shared vocabulary reducing context window waste and hallucination. Enables real-time genealogy and traceability of AI-generated code. Aligns with poteto's call for systems that make the easy thing the right thing for agents. Supports organic architecture with explicit constraints. Foundation for other concepts (MES, SPC).</p>
-<p><strong>Cons / Risks:</strong> Significant upfront ontology/hierarchy design effort. Risk of becoming a new central bottleneck or integration layer if governance is weak. Agents may still bypass or flood the namespace. Security and access control complexity. Over-engineering for small teams. Eventual consistency challenges. Semantic drift or ontology wars.</p>
-<p><strong>Viability:</strong> High for medium-to-large organizations already using event-driven architectures. Medium for startups. Strong complement to other concepts. Feasibility high with existing tools.</p>
-<p><strong>Team Adversarial Vote:</strong> Promising but governance-heavy. Recommended as foundational layer when scaling agent fleets. High long-term value if executed carefully.</p>
+<h1>1. Unified Development Namespace (UDN) — Detailed Implementation</h1>
+<p><a href="index.html">← Index</a></p>
+
+<div class="section">
+<h2>Architecture Overview</h2>
+<p>Event-driven semantic hierarchy acting as the real-time single source of truth. All producers (GitHub, CI, agents, observability, humans) publish CloudEvents or structured payloads to hierarchical topics. Consumers (agents, MES, dashboards, SPC) subscribe selectively. No point-to-point integrations.</p>
+<pre>
+[Producers] → [Event Bus: NATS JetStream / EMQX MQTT / Kafka]
+   Topics: org/{org}/team/{team}/repo/{repo}/event/{type}/...
+   → [Consumers: Agents, Orchestrators, Metrics, Dashboards]
+</pre>
+<p>Hierarchy inspired by ISA-95: Enterprise → Site/Team → Area/Repo → Line/PR or Issue → Cell/Step.</p>
+</div>
+
+<div class="section">
+<h2>Technology Choices (2026 practical)</h2>
+<ul>
+<li><strong>Event Bus:</strong> NATS JetStream (low latency, simple ops) or EMQX MQTT (UNS familiarity, retained messages for current state). Kafka for high-volume replay needs. Bridge GitHub/Linear/Jira webhooks via lightweight ingest (e.g., custom Go service or Siphon-like).</li>
+<li><strong>Payloads:</strong> CloudEvents 1.0 + custom data schema (JSON or Avro with schema registry). Include correlation_id, work_order_id, agent_session_id, prompt_hash, model_version, confidence.</li>
+<li><strong>Observability:</strong> OpenTelemetry (gen_ai.* semantic conventions) for traces; publish spans as events or link via trace_id in namespace.</li>
+<li><strong>Storage/History:</strong> Event log retention in JetStream/Kafka; materialize current state to ClickHouse or Postgres for queries; optional digital twin in graph DB.</li>
+<li><strong>Security:</strong> Topic ACLs, mTLS, short-lived credentials. Agents authenticate as principals.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Defined Datapoints &amp; Metrics</h2>
+<ul>
+<li>Event fields: timestamp, topic, event_type (pr.opened, agent.step.completed, test.failed, deploy.succeeded), payload (diff_size, tokens_used, test_results, quality_score), lineage (parent_event_ids, agent_id, human_id).</li>
+<li>Namespace metrics: publish rate, consumer lag, topic depth, schema compliance rate, subscription coverage.</li>
+<li>Derived: mean time to context (how fast agents get relevant events), event completeness score.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Development / Operations Process Flow</h2>
+<ol>
+<li>Human or product system creates validated intent (ticket in Linear/Jira) → publishes <code>intent.created</code> to namespace.</li>
+<li>Orchestrator/MES subscribes, creates production order, publishes <code>order.scheduled</code>.</li>
+<li>Agent stations subscribe to relevant topics (e.g., <code>.../order/{id}/ready_for_implement</code>), pull work, publish progress events continuously (<code>agent.tool_called</code>, <code>code.committed</code>).</li>
+<li>Quality gates (CI, other agents) subscribe to <code>code.proposed</code>, run checks, publish pass/fail with details.</li>
+<li>On abnormality, Jidoka station publishes <code>andon.triggered</code>; flow pauses until resolution.</li>
+<li>Successful deploy publishes <code>deploy.completed</code>; runtime telemetry (OpenTelemetry) flows back into namespace under <code>runtime/...</code> topics for closed-loop feedback.</li>
+<li>All history retained for genealogy, Kaizen analysis, and SPC.</li>
+</ol>
+<p>Agents receive fresh, contextualized state without polling. Adding a new agent or tool = one subscription. Continuous stream is observable and constrained by topic structure and event contracts.</p>
+</div>
+
+<div class="section">
+<h2>Adversarial Assessment (updated)</h2>
+<p>Pros remain strong for scale and coordination. Implementation risk is mainly ontology design and ensuring producers emit rich events. Start with GitHub + agent events on NATS; expand. Governance via schema registry and ACLs is mandatory.</p>
 </div>
 </body></html>

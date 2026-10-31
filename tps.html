@@ -1,19 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Jidoka / TPS AI Assembly Line</title>
-<style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1{color:#1a365d} .assessment{background:#edf2f7;padding:1rem;margin:1rem 0;border-radius:8px}</style></head>
+<head><meta charset="UTF-8"><title>Jidoka / TPS AI Assembly Line - Detailed</title>
+<style>body{font-family:system-ui;max-width:900px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1,h2{color:#1a365d} .section{background:#f7fafc;padding:1rem;margin:1rem 0;border-radius:8px;border-left:4px solid #3182ce}</style></head>
 <body>
-<h1>2. Jidoka / TPS AI Assembly Line</h1>
-<p><a href="index.html">← Back to index</a></p>
-<h2>Description</h2>
-<p>Apply Toyota Production System pillars to AI agent workflows. Stations: triage/signal → specify → implement → test/verify → review → deploy → monitor. Jidoka: agents detect abnormalities (failed tests, invariant violations, scope creep, security issues) and STOP (pull the Andon cord), preventing defect propagation. Quality at source rather than end-of-line inspection. Just-in-Time pull based on validated intent. WIP limits. Continuous Kaizen on prompts, skills, guardrails, and evaluation harnesses.</p>
-<h2>Manufacturing Parallel</h2>
-<p>Jidoka (automation with a human touch) stops the line on abnormality. Andon signals for help. Prevents producing more defects. Proven to raise quality and flow in manufacturing.</p>
-<div class="assessment">
-<h2>Adversarial Assessment</h2>
-<p><strong>Pros:</strong> Builds reliability into the process. Prevents cascade of bad AI-generated code (critical for continuous streams). Aligns with poteto: constraints make the easy path the correct one. Reduces rework waste. Supports progressive autonomy. Proven manufacturing discipline transferable.</p>
-<p><strong>Cons / Risks:</strong> May over-stop on false positives leading to alert fatigue. LLM non-determinism makes perfect abnormality detection hard. Can slow velocity if thresholds too strict. Human bottleneck on Andon responses. Less suitable for pure exploratory/creative work without clear quality criteria.</p>
-<p><strong>Viability:</strong> Strong for mature codebases with solid tests and invariants. Essential quality control layer. Medium risk of initial friction.</p>
-<p><strong>Team Adversarial Vote:</strong> Highly recommended. Core practice for any agent-heavy workflow. Tune carefully to balance flow and quality.</p>
+<h1>2. Jidoka-Enabled AI Assembly Line — Detailed Implementation</h1>
+<p><a href="index.html">← Index</a></p>
+
+<div class="section">
+<h2>Architecture Overview</h2>
+<p>Stations as specialized agents or services with explicit quality checks that can halt flow (Jidoka). Central or choreographed orchestration. Andon events escalate to humans. WIP limits enforced at each station. Kaizen loop updates guardrails from defect data.</p>
+<p>Stations: Intent/Spec → Plan → Implement → Verify (tests/lint/security) → Review → Deploy → Monitor. Each can STOP and signal.</p>
+</div>
+
+<div class="section">
+<h2>Technology Choices</h2>
+<ul>
+<li><strong>Orchestration:</strong> Temporal (durable workflows, excellent for long-running agent sessions with human waits) or Camunda (BPMN for auditable processes, strong governance). Lightweight alternative: pure event choreography on the UDN bus + state machine in code.</li>
+<li><strong>Agents:</strong> Frameworks supporting tool use and structured output (LangGraph, CrewAI, or custom with Anthropic/OpenAI agents). Instrumented with OpenTelemetry gen_ai conventions.</li>
+<li><strong>Quality Gates:</strong> GitHub Actions / custom runners for deterministic checks; secondary agents for semantic review. Policy as code (OPA/Rego or custom rules).</li>
+<li><strong>Andon:</strong> Events published to namespace → routed to Slack/Teams/PagerDuty with context (trace_id, work_order, failing check). Human response publishes resolution event that resumes workflow.</li>
+<li><strong>WIP Control:</strong> Queue depths monitored; orchestrator refuses new work above limits.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Defined Datapoints &amp; Metrics</h2>
+<ul>
+<li>Per station: arrival_time, start_time, end_time, outcome (pass/stop/fail), defect_type, confidence_score, tokens_consumed, human_interventions.</li>
+<li>Andon metrics: stop_count, mean_time_to_resolution, false_positive_rate, root_cause categories.</li>
+<li>Flow metrics: WIP per station, cycle time (intent to deploy), first-pass yield, rework loops.</li>
+<li>Kaizen inputs: every stop generates a candidate countermeasure (new test, prompt improvement, skill update) tracked to closure.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Development / Operations Process Flow</h2>
+<ol>
+<li>Validated intent pulled (JIT) into Plan station. Agent or human produces structured plan + acceptance criteria. Publishes plan.ready or andon if incomplete.</li>
+<li>Implement station (coding agent) consumes plan, generates code/tests in sandbox/branch. Continuous intermediate events. On invariant violation or low confidence → STOP + Andon.</li>
+<li>Verify station runs automated suite + static analysis + security. Failures trigger immediate Andon; do not proceed.</li>
+<li>Review station (human or specialist agent) only for higher-risk or failed auto-checks. Approval publishes review.passed.</li>
+<li>Deploy station (only if all prior stations green). Progressive darkening decides auto vs human gate.</li>
+<li>Monitor station watches production signals; anomalies feed back as new intents or Andons.</li>
+<li>Every defect → Kaizen ticket: update skill, add regression test, tighten guardrail. Process improves over time.</li>
+</ol>
+<p>The line stops at the first abnormality rather than propagating bad code. Humans intervene only when needed. Continuous improvement is data-driven from the stops.</p>
 </div>
 </body></html>

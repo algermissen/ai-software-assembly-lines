@@ -1,19 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Progressive Dark Factory Lines</title>
-<style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1{color:#1a365d} .assessment{background:#edf2f7;padding:1rem;margin:1rem 0;border-radius:8px}</style></head>
+<head><meta charset="UTF-8"><title>Progressive Dark Factory - Detailed</title>
+<style>body{font-family:system-ui;max-width:900px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1,h2{color:#1a365d} .section{background:#f7fafc;padding:1rem;margin:1rem 0;border-radius:8px;border-left:4px solid #3182ce}</style></head>
 <body>
-<h1>4. Progressive Dark Factory Lines</h1>
-<p><a href="index.html">← Back to index</a></p>
-<h2>Description</h2>
-<p>Lights-out / dark factory concept from manufacturing (robots build with lights off, no humans on floor). Applied to software: fully automated agent pipelines from spec to production for domains where reliability is proven. Progressive and risk-based: start "lit" (human in loop) and darken only after demonstrated first-pass yield, low escaped defects, and acceptable cost-of-error. High-stakes (security, payments, core logic, irreversible changes) remain supervised. Humans focus on intent, architecture, and exception handling.</p>
-<h2>Manufacturing Parallel</h2>
-<p>Fanuc-style lights-out plants. Not everything is dark; risk and maturity determine autonomy level. 5-level autonomy scales (from assisted to fully hands-off) map well.</p>
-<div class="assessment">
-<h2>Adversarial Assessment</h2>
-<p><strong>Pros:</strong> Scales with AI capability improvements. Matches cost of mistakes to oversight. Frees humans for high-leverage work. Practical near-term path (most teams at levels 2-3 today). Addresses poteto's continuous stream by controlling chaos where safe.</p>
-<p><strong>Cons / Risks:</strong> Hard to accurately measure "trustworthy enough." Misclassification of risk. Silent failures or regressions in dark zones as models/prompts drift. Potential skill atrophy. Over-optimism about full autonomy.</p>
-<p><strong>Viability:</strong> High practical near-term value. Must-have progressive approach rather than all-or-nothing.</p>
-<p><strong>Team Adversarial Vote:</strong> Essential. Implement with clear risk tiers and continuous monitoring. Do not force full dark factory prematurely.</p>
+<h1>4. Progressive Dark Factory Lines — Detailed Implementation</h1>
+<p><a href="index.html">← Index</a></p>
+
+<div class="section">
+<h2>Architecture Overview</h2>
+<p>Risk-tiered autonomy overlay on the assembly line and MES. Each work item and station has a risk classification. Dark (fully automated, no human gate) is allowed only when historical first-pass yield, escaped defect rate, and detection capability meet thresholds for that risk tier. Strong rollback, observability, and human override always available.</p>
+</div>
+
+<div class="section">
+<h2>Technology Choices</h2>
+<ul>
+<li><strong>Risk Classification:</strong> Fields on tickets/orders + policy engine (OPA/Rego or custom rules evaluating blast radius, reversibility, data sensitivity, historical performance of similar changes). Updated by humans or from incident data.</li>
+<li><strong>Autonomy Decision:</strong> MES or dedicated policy service checks current tier eligibility before each human-sensitive gate. Decision logged as event.</li>
+<li><strong>Progressive Promotion:</strong> Metrics service (SPC layer) computes rolling yield/defect rates per risk category and station; auto-suggests or requires human approval to raise autonomy level.</li>
+<li><strong>Safety Nets:</strong> Feature flags / progressive delivery (LaunchDarkly or custom), automatic rollback on anomaly detection, canary analysis. All events in UDN.</li>
+<li><strong>Human Override:</strong> Always possible via Andon or explicit hold; logged for Kaizen.</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Defined Datapoints &amp; Metrics</h2>
+<ul>
+<li>Per item: risk_tier (low/medium/high/critical), current_autonomy_level (lit/supervised/dark), eligibility_score (based on historical yield for similar items).</li>
+<li>Thresholds: e.g., dark allowed if first-pass yield &gt; 95% and escaped defects &lt; 0.5% over last N items in that category.</li>
+<li>Metrics: % of volume running dark by tier, promotion/demotion events, silent failure rate in dark zones, mean time to human intervention when needed, skill coverage (human practice on high-risk).</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>Development / Operations Process Flow</h2>
+<ol>
+<li>Order enters with risk classification (manual or auto-suggested).</li>
+<li>At each potential human gate, policy evaluates: if eligible for dark and station history supports it, skip human and proceed; else require review.</li>
+<li>All steps still emit full events and traces for later analysis.</li>
+<li>Post-deploy monitoring runs; anomalies can auto-demote the category or trigger rollback.</li>
+<li>Periodic review (or continuous SPC) of dark-zone performance; promote reliable categories, demote if drift detected.</li>
+<li>Humans retain ultimate authority and focus on defining constraints, reviewing exceptions, and improving the system.</li>
+</ol>
+<p>Enables safe scaling of the continuous code stream while protecting high-stakes work. Autonomy is earned and continuously re-validated, not assumed.</p>
 </div>
 </body></html>

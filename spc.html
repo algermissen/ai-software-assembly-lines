@@ -1,52 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><title>SPC &amp; OEE - Detailed Architecture</title>
-<style>body{font-family:system-ui;max-width:900px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1,h2{color:#1a365d} .section{background:#f7fafc;padding:1rem;margin:1rem 0;border-radius:8px;border-left:4px solid #3182ce}</style></head>
+<style>
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  line-height: 1.7;
+  background: linear-gradient(135deg, #0a192f 0%, #112240 40%, #1a365d 100%);
+  color: #e2e8f0;
+  min-height: 100vh;
+}
+h1, h2 { color: #90cdf4; }
+a { color: #63b3ed; }
+.section {
+  background: rgba(17, 34, 64, 0.7);
+  padding: 1.25rem;
+  margin: 1.25rem 0;
+  border-radius: 10px;
+  border-left: 4px solid #3182ce;
+}
+</style></head>
 <body>
 <h1>5. SPC &amp; OEE for AI Code Production — Detailed Implementation</h1>
-<p><a href="index.html">← Index</a></p>
-
+<p><a href="index.html">← Back to index</a></p>
 <div class="section">
 <h2>Architecture Overview</h2>
-<p>Measurement and control layer treating agent pipelines, stations, and review processes as manufacturing equipment. Collects time-series and event data from the UDN, computes OEE and SPC signals, visualizes control charts, and feeds alerts into Jidoka/Andon and Kaizen processes.</p>
+<p>Measurement layer computing OEE and SPC from UDN/OTel data, driving Kaizen.</p>
 </div>
-
 <div class="section">
 <h2>Technology Choices</h2>
 <ul>
-<li><strong>Collection:</strong> OpenTelemetry metrics + traces from agents, Temporal, CI; events from UDN. Export to Prometheus or ClickHouse.</li>
-<li><strong>Calculation &amp; Storage:</strong> ClickHouse or Timescale for raw events; materialize OEE and control limits in scheduled jobs or Flink/stream processing. Grafana for dashboards and alerting.</li>
-<li><strong>SPC:</strong> Standard control charts (X-bar, p-charts for yield/defect rates) implemented in Grafana or a small analytics service. Alerts when process goes out of control.</li>
-<li><strong>Integration:</strong> Out-of-control or low-OEE signals published back to UDN as andon or kaizen.candidate events.</li>
+<li>OpenTelemetry metrics/traces to Prometheus or ClickHouse.</li>
+<li>Grafana dashboards and alerting.</li>
+<li>Control charts for process stability.</li>
 </ul>
 </div>
-
 <div class="section">
 <h2>Defined Datapoints &amp; Metrics</h2>
-<p><strong>OEE components (per station or line):</strong></p>
+<p>OEE = Availability × Performance × Quality</p>
 <ul>
-<li>Availability = (planned time − downtime) / planned time. Downtime = agent failures, queue waits, blocked states.</li>
-<li>Performance = (ideal cycle time × good units) / actual operating time. Ideal from historical or target.</li>
-<li>Quality = first-pass yield = good units / total units. Good = passes all gates without rework and no escaped defect within window.</li>
-<li>OEE = Availability × Performance × Quality.</li>
-</ul>
-<p><strong>Additional SPC &amp; quality metrics:</strong></p>
-<ul>
-<li>Cycle time (total and per station), rework rate, escaped defect rate, review time, token cost per accepted change, confidence distribution, process capability (Cpk-style on cycle time or yield).</li>
-<li>Control limits computed from stable historical periods; alerts on statistical signals (beyond 3σ, trends, etc.).</li>
+<li>Availability: uptime / planned time</li>
+<li>Performance: ideal cycle / actual</li>
+<li>Quality: first-pass yield</li>
+<li>Plus: rework rate, escaped defects, cycle time by stage, Cpk-style capability.</li>
 </ul>
 </div>
-
 <div class="section">
 <h2>Development / Operations Process Flow</h2>
 <ol>
-<li>Every station and agent action emits structured metrics and events into UDN/OTel.</li>
-<li>Analytics layer continuously computes rolling OEE, yields, and control charts.</li>
-<li>Dashboards give real-time plant-floor view of the software factory.</li>
-<li>Out-of-control or degrading metrics automatically raise Andon events or Kaizen candidates (e.g., "review time rising — investigate prompt or model drift").</li>
-<li>Teams use the data for targeted improvements rather than vanity velocity metrics.</li>
-<li>Baselines established pre-AI or per model version; comparisons track true process improvement.</li>
+<li>Instrument all stations/agents.</li>
+<li>Compute rolling OEE and control charts.</li>
+<li>Out-of-control signals raise Andon or Kaizen candidates.</li>
+<li>Use for data-driven improvement, not vanity metrics.</li>
 </ol>
-<p>Turns the continuous code stream into a measurable, controllable manufacturing process. Essential complement that makes the other four concepts improvable rather than anecdotal.</p>
 </div>
 </body></html>

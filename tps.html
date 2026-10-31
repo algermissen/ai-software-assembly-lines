@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Jidoka / TPS AI Assembly Line</title>
+<style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1{color:#1a365d} .assessment{background:#edf2f7;padding:1rem;margin:1rem 0;border-radius:8px}</style></head>
+<body>
+<h1>2. Jidoka / TPS AI Assembly Line</h1>
+<p><a href="index.html">← Back to index</a></p>
+<h2>Description</h2>
+<p>Apply Toyota Production System pillars to AI agent workflows. Stations: triage/signal → specify → implement → test/verify → review → deploy → monitor. Jidoka: agents detect abnormalities (failed tests, invariant violations, scope creep, security issues) and STOP (pull the Andon cord), preventing defect propagation. Quality at source rather than end-of-line inspection. Just-in-Time pull based on validated intent. WIP limits. Continuous Kaizen on prompts, skills, guardrails, and evaluation harnesses.</p>
+<h2>Manufacturing Parallel</h2>
+<p>Jidoka (automation with a human touch) stops the line on abnormality. Andon signals for help. Prevents producing more defects. Proven to raise quality and flow in manufacturing.</p>
+<div class="assessment">
+<h2>Adversarial Assessment</h2>
+<p><strong>Pros:</strong> Builds reliability into the process. Prevents cascade of bad AI-generated code (critical for continuous streams). Aligns with poteto: constraints make the easy path the correct one. Reduces rework waste. Supports progressive autonomy. Proven manufacturing discipline transferable.</p>
+<p><strong>Cons / Risks:</strong> May over-stop on false positives leading to alert fatigue. LLM non-determinism makes perfect abnormality detection hard. Can slow velocity if thresholds too strict. Human bottleneck on Andon responses. Less suitable for pure exploratory/creative work without clear quality criteria.</p>
+<p><strong>Viability:</strong> Strong for mature codebases with solid tests and invariants. Essential quality control layer. Medium risk of initial friction.</p>
+<p><strong>Team Adversarial Vote:</strong> Highly recommended. Core practice for any agent-heavy workflow. Tune carefully to balance flow and quality.</p>
+</div>
+</body></html>

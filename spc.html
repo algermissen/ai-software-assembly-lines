@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>SPC &amp; OEE for AI Code Production</title>
+<style>body{font-family:system-ui;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6} h1{color:#1a365d} .assessment{background:#edf2f7;padding:1rem;margin:1rem 0;border-radius:8px}</style></head>
+<body>
+<h1>5. SPC &amp; OEE for AI Code Production</h1>
+<p><a href="index.html">← Back to index</a></p>
+<h2>Description</h2>
+<p>Treat agent sessions, pipelines, and lines as manufacturing equipment. Apply Overall Equipment Effectiveness (OEE = Availability × Performance × Quality). Availability: agent/system uptime. Performance: actual vs ideal cycle time / throughput. Quality: first-pass yield, scrap/rework rate, escaped defect rate. Statistical Process Control (SPC): control charts for key metrics (cycle time, defect rate, review time, rework). Process capability (Cp/Cpk). Detect drift early. Complement to DORA metrics adapted for AI.</p>
+<h2>Manufacturing Parallel</h2>
+<p>OEE and SPC are foundational for continuous improvement in manufacturing. They quantify equipment and process performance, enabling Kaizen.</p>
+<div class="assessment">
+<h2>Adversarial Assessment</h2>
+<p><strong>Pros:</strong> Quantitative, proven manufacturing tools. Detects process degradation early. Balances throughput with quality (avoids pure volume metrics). Supports data-driven Kaizen on prompts, models, harnesses. Maps cleanly to existing DORA + rework/escaped defects.</p>
+<p><strong>Cons / Risks:</strong> Defining "good part" for code is more subjective than physical goods. Software variability higher than many manufacturing processes. Requires sufficient data volume. Risk of Goodhart's law / metric gaming by agents or teams. Implementation overhead.</p>
+<p><strong>Viability:</strong> High as overlay on any of the other concepts. Essential for scaling without quality collapse.</p>
+<p><strong>Team Adversarial Vote:</strong> Strongly recommended. Start with simple yield, rework, and cycle-time tracking. Expand to full SPC as volume grows.</p>
+</div>
+</body></html>
